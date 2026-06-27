@@ -1,0 +1,202 @@
+/* Custom styles on top of Bootstrap */
+.hover-shadow {
+  transition: box-shadow 0.3s ease;
+}
+
+.hover-shadow:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.transition {
+  transition: all 0.3s ease;
+}
+
+/* Responsive font sizes */
+@media (max-width: 768px) {
+  .display-5 {
+    font-size: 2rem;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Card image placeholder */
+.property-image-placeholder {
+  height: 200px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 3rem;
+}
+
+/* Loading spinner */
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Property Carousel Styles */
+.property-carousel .carousel-control-prev,
+.property-carousel .carousel-control-next {
+  width: 10%;
+  background: rgba(0,0,0,0.2);
+}
+
+.property-carousel .carousel-control-prev:hover,
+.property-carousel .carousel-control-next:hover {
+  background: rgba(0,0,0,0.3);
+}
+
+/* Hover Effects */
+.hover-shadow {
+  transition: all 0.3s ease;
+}
+
+.hover-shadow:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+
+/* Property Image Placeholder */
+.property-image-placeholder {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .property-carousel .carousel-control-prev,
+  .property-carousel .carousel-control-next {
+    width: 15%;
+  }
+}
+
+/* Navbar Styles */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* Navbar Links */
+.navbar-dark .navbar-nav .nav-link {
+  color: rgba(255,255,255,0.8);
+  transition: all 0.3s ease;
+  padding: 0.5rem 1rem;
+  margin: 0 0.2rem;
+  border-radius: 4px;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+  color: #fff;
+  background-color: rgba(255,255,255,0.1);
+}
+
+.navbar-dark .navbar-nav .nav-link.active {
+  color: #fff;
+  background-color: rgba(255,255,255,0.2);
+}
+
+/* User Dropdown */
+.user-dropdown .dropdown-toggle {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+}
+
+.user-dropdown .dropdown-toggle:hover {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.user-dropdown .dropdown-menu {
+  margin-top: 0.5rem;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-radius: 8px;
+  min-width: 240px;
+}
+
+.user-dropdown .dropdown-item {
+  padding: 0.6rem 1.2rem;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.user-dropdown .dropdown-item:hover {
+  background-color: #f8f9fa;
+  transform: translateX(5px);
+}
+
+.user-dropdown .dropdown-item.text-danger:hover {
+  background-color: #dc3545;
+  color: white !important;
+}
+
+.user-dropdown .dropdown-header {
+  color: #6c757d;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.5rem 1.2rem;
+}
+
+/* Badge in Navbar */
+.navbar .badge {
+  font-size: 0.7rem;
+  padding: 0.3rem 0.5rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 991px) {
+  .navbar-nav {
+    padding: 1rem 0;
+  }
+  
+  .navbar-nav .nav-link {
+    padding: 0.75rem 1rem !important;
+    margin: 0 !important;
+  }
+  
+  .user-dropdown .dropdown-menu {
+    box-shadow: none;
+    border: none;
+    background-color: transparent;
+  }
+  
+  .user-dropdown .dropdown-item {
+    color: rgba(255,255,255,0.8);
+  }
+  
+  .user-dropdown .dropdown-item:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: white;
+  }
+  
+  .user-dropdown .dropdown-header {
+    color: rgba(255,255,255,0.5);
+  }
+}
