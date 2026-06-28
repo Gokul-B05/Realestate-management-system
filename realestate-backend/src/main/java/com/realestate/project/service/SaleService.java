@@ -191,6 +191,8 @@ public class SaleService {
                     .map(this::mapToResponse)
                     .collect(Collectors.toList());
                     
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("Error fetching all sales: ", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching sales");

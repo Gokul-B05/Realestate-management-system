@@ -63,6 +63,8 @@ public class PropertyService {
             
             return mapToResponse(saved);
             
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("Error creating property: ", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error creating property: " + e.getMessage());
@@ -80,6 +82,8 @@ public class PropertyService {
                     .map(this::mapToResponse)
                     .collect(Collectors.toList());
                     
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("Error fetching properties: ", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching properties: " + e.getMessage());
@@ -148,6 +152,8 @@ public class PropertyService {
             
             return mapToResponse(updated);
             
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("Error updating property: ", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating property: " + e.getMessage());
@@ -187,6 +193,8 @@ public class PropertyService {
             propertyRepository.delete(property);
             logger.info("Property deleted successfully with ID: {}", id);
             
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("Error deleting property: ", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error deleting property: " + e.getMessage());

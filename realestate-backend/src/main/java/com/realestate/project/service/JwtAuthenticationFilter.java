@@ -8,6 +8,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -15,6 +17,7 @@ import java.util.Collections;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final JwtService jwtService;
 
     public JwtAuthenticationFilter(JwtService jwtService) {
@@ -34,19 +37,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Log the request
-        System.out.println("JwtAuthenticationFilter processing: " + request.getMethod() + " " + request.getRequestURI());
+        logger.debug("JwtAuthenticationFilter processing: {} {}", request.getMethod(), request.getRequestURI());
 
         String header = request.getHeader("Authorization");
 
         if (header == null || !header.startsWith("Bearer ")) {
-            System.out.println("No Bearer token found - continuing filter chain");
+            logger.debug("No Bearer token found - continuing filter chain");
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = header.substring(7);
-        System.out.println("Token found: " + token.substring(0, Math.min(20, token.length())) + "...");
+        logger.debug("Token found: {}...", token.substring(0, Math.min(10, token.length())));
 
         try {
             Claims claims = jwtService.extractAllClaims(token);
@@ -54,10 +56,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String email = claims.getSubject();
             String role = claims.get("role", String.class);
 
-            System.out.println("Token validated for user: " + email + " with role: " + role);
+            logger.debug("Token validated for user: {} with role: {}", email, role);
 
             if (email == null || role == null) {
-                System.out.println("Email or role is null in token");
+                logger.warn("Email or role is null in token");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
@@ -75,11 +77,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext()
                         .setAuthentication(authentication);
-                System.out.println("Authentication set in security context");
+                logger.debug("Authentication set in security context");
             }
 
         } catch (Exception ex) {
-            System.out.println("Token validation failed: " + ex.getMessage());
+            logger.warn("Token validation failed: {}", ex.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }

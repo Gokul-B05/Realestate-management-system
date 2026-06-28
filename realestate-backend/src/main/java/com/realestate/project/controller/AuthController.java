@@ -69,13 +69,6 @@ public class AuthController {
             
             if (user == null) {
                 logger.warn("User not found in database: {}", cleanEmail);
-                
-                // Log all users in database for debugging (remove in production)
-                logger.debug("All users in database:");
-                userRepository.findAll().forEach(u -> 
-                    logger.debug(" - {} (role: {})", u.getEmail(), u.getRole() != null ? u.getRole().getName() : "no role")
-                );
-                
                 return ResponseEntity.status(401).body("Invalid email or password");
             }
             

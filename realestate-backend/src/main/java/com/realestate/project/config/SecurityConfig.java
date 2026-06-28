@@ -55,13 +55,20 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Allow both React default ports
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000",  // Create React App
-            "http://localhost:5173",  // Vite (your current port)
-            "http://127.0.0.1:5173",
-            "http://127.0.0.1:3000"
-        ));
+        // Allow dynamic origins via environment variable, with fallback for local development
+        String envOrigins = System.getenv("ALLOWED_ORIGINS");
+        if (envOrigins != null && !envOrigins.trim().isEmpty()) {
+            configuration.setAllowedOrigins(Arrays.stream(envOrigins.split(","))
+                    .map(String::trim)
+                    .collect(java.util.stream.Collectors.toList()));
+        } else {
+            configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",  // Create React App
+                "http://localhost:5173",  // Vite (default port)
+                "http://127.0.0.1:5173",
+                "http://127.0.0.1:3000"
+            ));
+        }
         
         configuration.setAllowedMethods(Arrays.asList(
             "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"

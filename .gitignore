@@ -1,5 +1,27 @@
-backend/target/
-frontend/node_modules/
+# Dependency and Build Outputs
+realestate-backend/target/
+realestate-backend/*.jar
+realestate-backend/*.war
+realestate-frontend/node_modules/
+realestate-frontend/dist/
+realestate-frontend/build/
+
+# Logs and class files
 *.log
 *.class
+
+# Security & environment keys
 .env
+.env*.local
+realestate-frontend/.env
+realestate-frontend/.env.production.local
+
+# IDE files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store

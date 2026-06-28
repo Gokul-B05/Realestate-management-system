@@ -55,7 +55,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/property/{propertyId}")
-    @PreAuthorize("hasRole('ADMIN') or @appointmentService.isPropertyOwner(#propertyId, authentication.name)")
+    @PreAuthorize("hasRole('ADMIN') or @appointmentService.isPropertyOwnerByPropertyId(#propertyId, authentication.name)")
     public ResponseEntity<?> getPropertyAppointments(@PathVariable Long propertyId, Authentication authentication) {
         try {
             logger.info("Fetching appointments for property: {}", propertyId);

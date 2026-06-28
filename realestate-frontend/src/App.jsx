@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import NavigationBar from './components/common/Navbar';
 import PrivateRoute from './components/common/PrivateRoute';
 import AdminRoute from './components/common/AdminRoute';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // IMPORT ALL COMPONENTS
 import Login from './components/auth/Login';
@@ -72,8 +73,9 @@ const AppLayout = ({ children }) => {
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <AppLayout>
+      <ErrorBoundary>
+        <AuthProvider>
+          <AppLayout>
           <Routes>
             {/* ========== PUBLIC ROUTES ========== */}
             <Route path="/" element={<Login />} />
@@ -249,6 +251,7 @@ function App() {
           </Routes>
         </AppLayout>
       </AuthProvider>
+     </ErrorBoundary>
     </Router>
   );
 }

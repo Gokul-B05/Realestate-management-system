@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # ================= DATABASE SERVICE =================
+  postgres:
+    image: postgres:16-alpine
+    container_name: realestate-postgres
+    ports:
+      - "${DB_PORT_HOST:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${DB_NAME:-realestate}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres123}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      # Auto-run SQL migrations on startup (if database volume is empty)
+      - ./realestate-database/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - ./realestate-database/sample_data.sql:/docker-entrypoint-initdb.d/2-sample_data.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_NAME:-realestate}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - realestate-net
+
+  # ================= BACKEND API SERVICE =================
+  backend:
+    build:
+      context: ./realestate-backend
+      dockerfile: Dockerfile
+    container_name: realestate-backend
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-realestate}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres123}
+      DDL_AUTO: validate
+      SHOW_SQL: "false"
+      LOG_LEVEL_PROJECT: INFO
+      LOG_LEVEL_SPRING: WARN
+      LOG_LEVEL_SECURITY: WARN
+      JWT_SECRET: ${JWT_SECRET:-your-production-grade-super-secret-key-32-chars-long}
+      ALLOWED_ORIGINS: "http://localhost,http://localhost:80,http://127.0.0.1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - realestate-net
+
+  # ================= FRONTEND WEB SERVICE =================
+  frontend:
+    build:
+      context: ./realestate-frontend
+      dockerfile: Dockerfile
+    container_name: realestate-frontend
+    ports:
+      - "80:80"
+    environment:
+      VITE_API_BASE_URL: "/api"
+    depends_on:
+      - backend
+    networks:
+      - realestate-net
+
+networks:
+  realestate-net:
+    driver: bridge
+
+volumes:
+  pg-data:
+    driver: local
