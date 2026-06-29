@@ -1,0 +1,144 @@
+name: CI/CD — Build, Test & Deploy to Render
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # ──────────────────────────────────────────────────────────────
+  # JOB 1: Test & Build Backend
+  # ──────────────────────────────────────────────────────────────
+  backend-build:
+    name: Backend — Test & Build
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: realestate_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres123
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run tests
+        working-directory: ./realestate-backend
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: realestate_test
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres123
+          JWT_SECRET: test-secret-key-for-ci-only-not-production
+          DDL_AUTO: create-drop
+          SHOW_SQL: "false"
+        run: mvn test -B
+
+      - name: Build JAR
+        working-directory: ./realestate-backend
+        run: mvn clean package -DskipTests -B
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: realestate-backend/target/*.jar
+          retention-days: 1
+
+  # ──────────────────────────────────────────────────────────────
+  # JOB 2: Build Frontend
+  # ──────────────────────────────────────────────────────────────
+  frontend-build:
+    name: Frontend — Lint & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: realestate-frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./realestate-frontend
+        run: npm ci
+
+      - name: Lint
+        working-directory: ./realestate-frontend
+        run: npm run lint
+
+      - name: Build
+        working-directory: ./realestate-frontend
+        env:
+          VITE_API_BASE_URL: /api
+        run: npm run build
+
+  # ──────────────────────────────────────────────────────────────
+  # JOB 3: Deploy to Render (only on push to main)
+  # ──────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to Render
+    runs-on: ubuntu-latest
+    needs: [backend-build, frontend-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Deploy backend to Render
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_SERVICE_ID }}/deploys" \
+            -d '{}'
+
+      - name: Deploy frontend to Render
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_SERVICE_ID }}/deploys" \
+            -d '{}'
+
+      - name: Wait and verify backend health
+        run: |
+          echo "Waiting 90 seconds for backend to start..."
+          sleep 90
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            https://${{ secrets.RENDER_BACKEND_URL }}/api/test/hello || echo "000")
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ Backend is healthy (HTTP $STATUS)"
+          else
+            echo "⚠️  Backend returned HTTP $STATUS — check Render logs"
+          fi
+
+# ──────────────────────────────────────────────────────────────
+# REQUIRED GitHub Secrets (Settings → Secrets → Actions):
+#
+#   RENDER_API_KEY              → Your Render API key
+#   RENDER_BACKEND_SERVICE_ID   → srv-xxxx from Render backend service
+#   RENDER_FRONTEND_SERVICE_ID  → srv-xxxx from Render frontend service
+#   RENDER_BACKEND_URL          → e.g. realestate-backend.onrender.com
+# ──────────────────────────────────────────────────────────────
