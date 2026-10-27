@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Container, Row, Col, Card, Table, Badge, Button, Spinner, Alert,
   Form, InputGroup
@@ -18,15 +18,7 @@ const AdminAppointments = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
-
-  useEffect(() => {
-    filterAppointments();
-  }, [appointments, searchTerm, statusFilter]);
-
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     try {
       setLoading(true);
       console.log('Fetching all appointments...');
@@ -43,9 +35,9 @@ const AdminAppointments = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const filterAppointments = () => {
+  const filterAppointments = useCallback(() => {
     let filtered = [...appointments];
     
     // Filter by status
@@ -66,7 +58,15 @@ const AdminAppointments = () => {
     }
     
     setFilteredAppointments(filtered);
-  };
+  }, [appointments, searchTerm, statusFilter]);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  useEffect(() => {
+    filterAppointments();
+  }, [filterAppointments]);
 
   const handleUpdateStatus = async (id, newStatus) => {
     try {
@@ -74,6 +74,7 @@ const AdminAppointments = () => {
       // Refresh the list
       fetchAppointments();
     } catch (err) {
+      console.error('Failed to update appointment status:', err);
       alert('Failed to update appointment status');
     }
   };
@@ -99,6 +100,7 @@ const AdminAppointments = () => {
         minute: '2-digit'
       });
     } catch (e) {
+      console.warn('Date formatting error:', e);
       return dateString;
     }
   };

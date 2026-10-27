@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Container, Row, Col, Card, Table, Badge, Spinner, Alert, 
@@ -23,13 +23,9 @@ const Appointments = () => {
   const [activeTab, setActiveTab] = useState('my-visits');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const { user, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
 
-  useEffect(() => {
-    fetchAllAppointments();
-  }, []);
-
-  const fetchAllAppointments = async () => {
+  const fetchAllAppointments = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -43,7 +39,7 @@ const Appointments = () => {
         const ownerAppts = await appointmentService.getOwnerAppointments();
         setOwnerAppointments(ownerAppts || []);
       } catch (err) {
-        console.log('Not a property owner or no owner appointments');
+        console.log('Not a property owner or no owner appointments', err);
         setOwnerAppointments([]);
       }
       
@@ -53,7 +49,7 @@ const Appointments = () => {
           const allAppts = await appointmentService.getAllAppointments();
           setAllAppointments(allAppts || []);
         } catch (err) {
-          console.log('Could not fetch all appointments');
+          console.log('Could not fetch all appointments', err);
           setAllAppointments([]);
         }
       }
@@ -64,13 +60,18 @@ const Appointments = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAdmin]);
+
+  useEffect(() => {
+    fetchAllAppointments();
+  }, [fetchAllAppointments]);
 
   const handleUpdateStatus = async (id, status) => {
     try {
       await appointmentService.updateAppointmentStatus(id, status);
       await fetchAllAppointments(); // Refresh data
     } catch (err) {
+      console.error('Failed to update appointment status:', err);
       alert('Failed to update appointment status');
     }
   };
@@ -82,6 +83,7 @@ const Appointments = () => {
       await appointmentService.cancelAppointment(id);
       await fetchAllAppointments();
     } catch (err) {
+      console.error('Failed to cancel appointment:', err);
       alert('Failed to cancel appointment');
     }
   };
@@ -123,6 +125,7 @@ const Appointments = () => {
         minute: '2-digit'
       });
     } catch (e) {
+      console.warn('Date formatting error:', e);
       return 'N/A';
     }
   };

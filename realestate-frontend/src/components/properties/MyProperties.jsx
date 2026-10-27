@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Spinner, Alert, Badge } from 'react-bootstrap';
 import { FaEdit, FaTrash, FaPlus, FaHome, FaMapMarkerAlt, FaDollarSign } from 'react-icons/fa';
@@ -11,21 +11,22 @@ const MyProperties = () => {
   const [error, setError] = useState('');
   const { user } = useAuth();
 
-  useEffect(() => {
-    fetchMyProperties();
-  }, []);
-
-  const fetchMyProperties = async () => {
+  const fetchMyProperties = useCallback(async () => {
     try {
       const allProperties = await propertyService.getAllProperties();
       const myProps = allProperties.filter(p => p.ownerEmail === user?.email);
       setProperties(myProps);
     } catch (err) {
+      console.error('Failed to load your properties:', err);
       setError('Failed to load your properties');
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.email]);
+
+  useEffect(() => {
+    fetchMyProperties();
+  }, [fetchMyProperties]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this property?')) return;
@@ -33,6 +34,7 @@ const MyProperties = () => {
       await propertyService.deleteProperty(id);
       setProperties(properties.filter(p => p.id !== id));
     } catch (err) {
+      console.error('Failed to delete property:', err);
       alert('Failed to delete property');
     }
   };

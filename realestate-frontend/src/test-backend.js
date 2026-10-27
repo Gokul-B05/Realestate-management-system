@@ -1,5 +1,5 @@
-// Run this with: node test-backend.js
-const http = require('http');
+// Run this with: node src/test-backend.js
+import http from 'http';
 
 const options = {
   hostname: 'localhost',

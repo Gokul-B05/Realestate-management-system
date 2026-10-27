@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Container, Row, Col, Card, Table, Badge, Button, Spinner, Alert, 
   Form, InputGroup, Modal 
@@ -9,11 +9,9 @@ import {
 } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import propertyService from '../../services/propertyService';
-import { useAuth } from '../../context/AuthContext';
 
 const AdminProperties = () => {
   const [properties, setProperties] = useState([]);
-  const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,36 +22,24 @@ const AdminProperties = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const { isAdmin } = useAuth();
 
-  useEffect(() => {
-    fetchProperties();
-  }, []);
-
-  useEffect(() => {
-    filterProperties();
-  }, [properties, searchTerm, filterType, filterStatus]);
-
-  const fetchProperties = async () => {
+  const fetchProperties = useCallback(async () => {
     try {
-      setLoading(true);
       console.log('Fetching all properties for admin...');
       
       // Fetch real data from your backend
       const data = await propertyService.getAllProperties();
       
       setProperties(data || []);
-      setFilteredProperties(data || []);
-      setLoading(false);
-      
     } catch (err) {
       console.error('Error fetching properties:', err);
       setError('Failed to load properties');
+    } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const filterProperties = () => {
+  const filteredProperties = useMemo(() => {
     let filtered = [...properties];
     
     // Filter by type (SALE/RENT)
@@ -78,8 +64,12 @@ const AdminProperties = () => {
       );
     }
     
-    setFilteredProperties(filtered);
-  };
+    return filtered;
+  }, [properties, searchTerm, filterType, filterStatus]);
+
+  useEffect(() => {
+    fetchProperties();
+  }, [fetchProperties]);
 
   const handleViewDetails = (property) => {
     setSelectedProperty(property);

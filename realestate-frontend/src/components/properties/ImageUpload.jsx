@@ -35,6 +35,7 @@ const ImageUpload = ({ show, onHide, propertyId, onSuccess }) => {
       onHide();
       
     } catch (err) {
+      console.error('Failed to add image:', err);
       setError('Failed to add image. Please try again.');
     } finally {
       setLoading(false);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { FaCalendarCheck, FaPhone, FaEnvelope, FaClock } from 'react-icons/fa';
@@ -20,22 +20,23 @@ const AppointmentForm = () => {
     contactPhone: ''
   });
 
-  useEffect(() => {
-    fetchPropertyDetails();
-  }, [propertyId]);
-
-  const fetchPropertyDetails = async () => {
+  const fetchPropertyDetails = useCallback(async () => {
     try {
       setPropertyLoading(true);
       const properties = await propertyService.getAllProperties();
       const foundProperty = properties.find(p => p.id === parseInt(propertyId));
       setProperty(foundProperty);
     } catch (err) {
+      console.error('Failed to load property details:', err);
       setError('Failed to load property details');
     } finally {
       setPropertyLoading(false);
     }
-  };
+  }, [propertyId]);
+
+  useEffect(() => {
+    fetchPropertyDetails();
+  }, [fetchPropertyDetails]);
 
   const handleChange = (e) => {
     setFormData({

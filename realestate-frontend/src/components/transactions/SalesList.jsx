@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Container, Row, Col, Card, Table, Badge, Spinner, Alert, 
-  Tabs, Tab, Button, Form, InputGroup 
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Container, Row, Col, Card, Table, Badge, Spinner, Alert,
+  Tabs, Tab, Button, Form, InputGroup
 } from 'react-bootstrap';
-import { 
-  FaShoppingCart, FaDollarSign, FaCalendar, FaUser, 
+import {
+  FaShoppingCart, FaDollarSign, FaCalendar, FaUser,
   FaHome, FaSearch, FaFilter, FaFileExport, FaEye
 } from 'react-icons/fa';
 import saleService from '../../services/saleService';
-import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 
 const SalesList = () => {
@@ -20,17 +19,45 @@ const SalesList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredPurchases, setFilteredPurchases] = useState([]);
   const [filteredSales, setFilteredSales] = useState([]);
-  const { user, isAdmin } = useAuth();
+
+  const fetchSales = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      console.log('Fetching sales data...');
+
+      // Fetch purchases and sales in parallel
+      const [purchasesData, salesData] = await Promise.all([
+        saleService.getMyPurchases(),
+        saleService.getMySales()
+      ]);
+
+      console.log('Purchases received:', purchasesData);
+      console.log('Sales received:', salesData);
+
+      setPurchases(purchasesData || []);
+      setSales(salesData || []);
+      setFilteredPurchases(purchasesData || []);
+      setFilteredSales(salesData || []);
+
+    } catch (err) {
+      console.error('Error fetching sales:', err);
+      setError('Failed to load sales data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchSales();
-  }, []);
+  }, [fetchSales]);
 
   useEffect(() => {
     // Filter purchases based on search term
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
-      const filtered = purchases.filter(item => 
+      const filtered = purchases.filter(item =>
         item.propertyTitle?.toLowerCase().includes(term) ||
         item.sellerName?.toLowerCase().includes(term) ||
         item.paymentMethod?.toLowerCase().includes(term)
@@ -45,7 +72,7 @@ const SalesList = () => {
     // Filter sales based on search term
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
-      const filtered = sales.filter(item => 
+      const filtered = sales.filter(item =>
         item.propertyTitle?.toLowerCase().includes(term) ||
         item.buyerName?.toLowerCase().includes(term) ||
         item.paymentMethod?.toLowerCase().includes(term)
@@ -55,35 +82,6 @@ const SalesList = () => {
       setFilteredSales(sales);
     }
   }, [searchTerm, sales]);
-
-  const fetchSales = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      
-      console.log('Fetching sales data...');
-      
-      // Fetch purchases and sales in parallel
-      const [purchasesData, salesData] = await Promise.all([
-        saleService.getMyPurchases(),
-        saleService.getMySales()
-      ]);
-      
-      console.log('Purchases received:', purchasesData);
-      console.log('Sales received:', salesData);
-      
-      setPurchases(purchasesData || []);
-      setSales(salesData || []);
-      setFilteredPurchases(purchasesData || []);
-      setFilteredSales(salesData || []);
-      
-    } catch (err) {
-      console.error('Error fetching sales:', err);
-      setError('Failed to load sales data. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -96,6 +94,7 @@ const SalesList = () => {
         minute: '2-digit'
       });
     } catch (e) {
+      console.warn('Date formatting error:', e);
       return 'N/A';
     }
   };
@@ -122,7 +121,7 @@ const SalesList = () => {
 
   const exportToCSV = (data, type) => {
     if (!data || data.length === 0) return;
-    
+
     const headers = ['Property', 'Date', 'Price', type === 'purchases' ? 'Seller' : 'Buyer', 'Payment Method', 'Status'];
     const csvContent = [
       headers.join(','),
@@ -182,9 +181,9 @@ const SalesList = () => {
           </p>
         </Col>
         <Col md={6} className="text-end">
-          <Button 
-            as={Link} 
-            to="/properties" 
+          <Button
+            as={Link}
+            to="/properties"
             variant="outline-primary"
             className="me-2"
           >
@@ -208,8 +207,8 @@ const SalesList = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             {searchTerm && (
-              <Button 
-                variant="outline-secondary" 
+              <Button
+                variant="outline-secondary"
                 onClick={() => setSearchTerm('')}
               >
                 Clear
@@ -218,8 +217,8 @@ const SalesList = () => {
           </InputGroup>
         </Col>
         <Col md={6} className="text-end">
-          <Button 
-            variant="outline-success" 
+          <Button
+            variant="outline-success"
             onClick={() => exportToCSV(activeTab === 'purchases' ? filteredPurchases : filteredSales, activeTab)}
             disabled={activeTab === 'purchases' ? filteredPurchases.length === 0 : filteredSales.length === 0}
           >
@@ -235,8 +234,8 @@ const SalesList = () => {
         onSelect={(k) => setActiveTab(k)}
         className="mb-4"
       >
-        <Tab 
-          eventKey="purchases" 
+        <Tab
+          eventKey="purchases"
           title={
             <span>
               <FaUser className="me-2" />
@@ -310,8 +309,8 @@ const SalesList = () => {
           )}
         </Tab>
 
-        <Tab 
-          eventKey="sales" 
+        <Tab
+          eventKey="sales"
           title={
             <span>
               <FaHome className="me-2" />

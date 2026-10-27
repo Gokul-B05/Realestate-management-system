@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Table, Badge, Spinner, Alert, Nav, Button } from 'react-bootstrap';
 import { FaShoppingCart, FaDollarSign, FaCalendar, FaDownload, FaFilter } from 'react-icons/fa';
 import transactionService from '../../services/transactionService';
@@ -10,13 +10,9 @@ const TransactionList = () => {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('purchases');
   const [filterStatus, setFilterStatus] = useState('ALL');
-  const { user, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
 
-  useEffect(() => {
-    fetchTransactions();
-  }, [activeTab]);
-
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
       setLoading(true);
       let data = [];
@@ -36,7 +32,11 @@ const TransactionList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab, isAdmin]);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   const getPaymentStatusBadge = (status) => {
     const colors = {
@@ -58,6 +58,7 @@ const TransactionList = () => {
         day: 'numeric'
       });
     } catch (e) {
+      console.warn('Date formatting error:', e);
       return 'N/A';
     }
   };
@@ -76,10 +77,6 @@ const TransactionList = () => {
     if (activeTab === 'purchases') return 'My Purchases';
     if (activeTab === 'sales') return 'My Sales';
     return 'All Transactions';
-  };
-
-  const getTabCount = () => {
-    return transactions.length;
   };
 
   const filteredTransactions = transactions.filter(t => {
