@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { 
+import React, { useState, useEffect, useCallback } from 'react';
+import {
   Modal, Form, Button, Alert, Spinner, Table, Badge  // Add Badge here
 } from 'react-bootstrap';
-import { 
-  FaDollarSign, FaUser, FaCreditCard, FaCheck, FaSearch, FaTimes 
+import {
+  FaDollarSign, FaUser, FaCreditCard, FaCheck, FaSearch, FaTimes
 } from 'react-icons/fa';
 import saleService from '../../services/saleService';
 import userService from '../../services/userService';
@@ -28,28 +28,7 @@ const CloseSaleModal = ({ show, onHide, property, onSuccess }) => {
     saleDate: new Date().toISOString().slice(0, 16)
   });
 
-  useEffect(() => {
-    if (show && property) {
-      resetForm();
-      fetchUsers();
-    }
-  }, [show, property]);
-
-  useEffect(() => {
-    // Filter users based on search term
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      const filtered = users.filter(user => 
-        user.name?.toLowerCase().includes(term) ||
-        user.email?.toLowerCase().includes(term)
-      );
-      setFilteredUsers(filtered);
-    } else {
-      setFilteredUsers(users);
-    }
-  }, [searchTerm, users]);
-
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setStep(1);
     setSelectedBuyer(null);
     setSearchTerm('');
@@ -62,15 +41,15 @@ const CloseSaleModal = ({ show, onHide, property, onSuccess }) => {
     });
     setError('');
     setSuccess('');
-  };
+  }, [property?.id, property?.price]);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoadingUsers(true);
     try {
       const data = await userService.getAllUsers();
       // Filter out the property owner and current user
-      const filtered = data.filter(u => 
-        u.id !== property?.userId && 
+      const filtered = data.filter(u =>
+        u.id !== property?.userId &&
         u.email !== property?.ownerEmail &&
         u.email !== user?.email // Also filter out current user
       );
@@ -82,7 +61,28 @@ const CloseSaleModal = ({ show, onHide, property, onSuccess }) => {
     } finally {
       setLoadingUsers(false);
     }
-  };
+  }, [property?.userId, property?.ownerEmail, user?.email]);
+
+  useEffect(() => {
+    if (show && property) {
+      resetForm();
+      fetchUsers();
+    }
+  }, [show, property, resetForm, fetchUsers]);
+
+  useEffect(() => {
+    // Filter users based on search term
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      const filtered = users.filter(userItem =>
+        userItem.name?.toLowerCase().includes(term) ||
+        userItem.email?.toLowerCase().includes(term)
+      );
+      setFilteredUsers(filtered);
+    } else {
+      setFilteredUsers(users);
+    }
+  }, [searchTerm, users]);
 
   const handleSelectBuyer = (buyer) => {
     setSelectedBuyer(buyer);
@@ -111,9 +111,9 @@ const CloseSaleModal = ({ show, onHide, property, onSuccess }) => {
         ...formData,
         salePrice: parseFloat(formData.salePrice)
       });
-      
+
       setSuccess('Sale completed successfully!');
-      
+
       // Call success callback
       if (onSuccess) {
         setTimeout(() => {
@@ -137,16 +137,6 @@ const CloseSaleModal = ({ show, onHide, property, onSuccess }) => {
     resetForm();
     onHide();
   };
-
-  // Determine if current user can complete sale (admin or owner)
-  const canCompleteSale = () => {
-    const isAdmin = user?.role === 'ROLE_ADMIN';
-    const isOwner = property?.ownerEmail === user?.email;
-    return isAdmin || isOwner;
-  };
-
-  // Line 165 is likely where Badge is used - check your file
-  // If you're using Badge anywhere, make sure it's imported
 
   return (
     <Modal show={show} onHide={handleClose} size="lg" centered>
@@ -295,8 +285,8 @@ const CloseSaleModal = ({ show, onHide, property, onSuccess }) => {
                 <Button variant="secondary" onClick={handleBack}>
                   Back
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   variant="success"
                   disabled={loading}
                 >
@@ -331,17 +321,17 @@ const styles = `
   .buyer-list::-webkit-scrollbar {
     width: 8px;
   }
-  
+
   .buyer-list::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 4px;
   }
-  
+
   .buyer-list::-webkit-scrollbar-thumb {
     background: #888;
     border-radius: 4px;
   }
-  
+
   .buyer-list::-webkit-scrollbar-thumb:hover {
     background: #555;
   }

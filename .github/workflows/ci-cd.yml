@@ -11,6 +11,22 @@ jobs:
   backend-ci:
     name: Backend Build & Test
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: realestate_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres123
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -23,9 +39,17 @@ jobs:
           cache: 'maven'
 
       - name: Build & Run Tests
-        run: |
-          cd realestate-backend
-          mvn clean package -B
+        working-directory: ./realestate-backend
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: realestate_test
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres123
+          JWT_SECRET: test-secret-key-for-ci-only-not-production
+          DDL_AUTO: create-drop
+          SHOW_SQL: "false"
+        run: mvn clean package -B
 
   # ================= FRONTEND BUILD & LINT =================
   frontend-ci:
@@ -43,19 +67,16 @@ jobs:
           cache-dependency-path: realestate-frontend/package-lock.json
 
       - name: Install Dependencies
-        run: |
-          cd realestate-frontend
-          npm ci
+        working-directory: ./realestate-frontend
+        run: npm ci
 
       - name: Run Linter
-        run: |
-          cd realestate-frontend
-          npm run lint --if-present
+        working-directory: ./realestate-frontend
+        run: npm run lint --if-present
 
       - name: Build Static Assets
-        run: |
-          cd realestate-frontend
-          npm run build
+        working-directory: ./realestate-frontend
+        run: npm run build
 
   # ================= DOCKER BUILD VERIFICATION =================
   docker-ci:

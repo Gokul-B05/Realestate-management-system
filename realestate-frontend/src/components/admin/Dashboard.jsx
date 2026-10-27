@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Spinner, Alert, Table, Badge, Button } from 'react-bootstrap';
 import { 
   FaUsers, FaHome, FaCalendarCheck, FaShoppingCart, 
@@ -24,14 +24,8 @@ const AdminDashboard = () => {
   const [error, setError] = useState('');
   const { user } = useAuth();
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
-      setLoading(true);
-      
       console.log('Fetching dashboard data...');
       
       // Fetch users with error handling
@@ -82,14 +76,17 @@ const AdminDashboard = () => {
         recentProperties: properties.slice(0, 5) || [],
         recentSales: sales.slice(0, 5) || []
       });
-      
-      setLoading(false);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setError('Failed to load dashboard data');
+    } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const formatPrice = (price) => {
     if (!price) return '$0';
@@ -120,6 +117,7 @@ const AdminDashboard = () => {
         day: 'numeric'
       });
     } catch (e) {
+      console.warn('Date formatting error:', e);
       return 'N/A';
     }
   };
@@ -137,7 +135,7 @@ const AdminDashboard = () => {
     return (
       <Container className="py-5">
         <Alert variant="danger">{error}</Alert>
-        <Button onClick={fetchDashboardData} variant="primary">Try Again</Button>
+        <Button onClick={() => { setLoading(true); fetchDashboardData(); }} variant="primary">Try Again</Button>
       </Container>
     );
   }

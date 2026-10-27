@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Container, Card, Button, Alert, Spinner } from 'react-bootstrap';
 import api from '../services/api';
 

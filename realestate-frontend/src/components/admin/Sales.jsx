@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Table, Badge, Spinner, Alert, Form, InputGroup, Button } from 'react-bootstrap';
 import { FaShoppingCart, FaDollarSign, FaCalendar, FaUser, FaSearch, FaFileExport } from 'react-icons/fa';
 import saleService from '../../services/saleService';
@@ -10,9 +10,23 @@ const AdminSales = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
+  const fetchAllSales = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await saleService.getAllSales();
+      setSales(data || []);
+      setFilteredSales(data || []);
+    } catch (err) {
+      console.error('Failed to load sales data:', err);
+      setError('Failed to load sales data');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchAllSales();
-  }, []);
+  }, [fetchAllSales]);
 
   useEffect(() => {
     if (searchTerm.trim()) {
@@ -28,19 +42,6 @@ const AdminSales = () => {
       setFilteredSales(sales);
     }
   }, [searchTerm, sales]);
-
-  const fetchAllSales = async () => {
-    try {
-      setLoading(true);
-      const data = await saleService.getAllSales();
-      setSales(data || []);
-      setFilteredSales(data || []);
-    } catch (err) {
-      setError('Failed to load sales data');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';

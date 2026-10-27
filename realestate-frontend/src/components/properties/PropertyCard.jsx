@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Card, Button, Badge, Carousel, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { 
   FaEdit, FaTrash, FaHome, FaMapMarkerAlt, FaDollarSign, 
@@ -11,7 +11,7 @@ import CloseSaleModal from './CloseSaleModal';
 
 const PropertyCard = ({ property, onDelete, onViewDetails, onViewImages }) => {
   const { user, isAdmin } = useAuth();
-  const navigate = useNavigate();
+
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showSaleModal, setShowSaleModal] = useState(false);
 

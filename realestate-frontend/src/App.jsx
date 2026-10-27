@@ -7,6 +7,7 @@ import AdminRoute from './components/common/AdminRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
 // IMPORT ALL COMPONENTS
+import LandingPage from './components/landing/LandingPage';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 
@@ -48,10 +49,15 @@ import './App.css';
 // Layout component that conditionally renders navbar
 const AppLayout = ({ children }) => {
   const location = useLocation();
+
+  // Landing page has its own standalone navbar and footer
+  if (location.pathname === '/') {
+    return <>{children}</>;
+  }
   
   // More robust check for auth pages
   const isAuthPage = 
-    location.pathname === '/' || 
+
     location.pathname === '/login' || 
     location.pathname === '/register';
   
@@ -78,7 +84,7 @@ function App() {
           <AppLayout>
           <Routes>
             {/* ========== PUBLIC ROUTES ========== */}
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             

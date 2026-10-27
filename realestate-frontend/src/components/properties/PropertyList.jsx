@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   Container, Row, Col, Button, Spinner, Alert, Form, InputGroup,
@@ -35,15 +35,7 @@ const PropertyList = () => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchProperties();
-  }, []);
-
-  useEffect(() => {
-    filterProperties();
-  }, [properties, searchTerm, filterType, showSold]);
-
-  const fetchProperties = async () => {
+  const fetchProperties = useCallback(async () => {
     try {
       console.log('Fetching properties...');
       const data = await propertyService.getAllProperties();
@@ -74,9 +66,9 @@ const PropertyList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const filterProperties = () => {
+  const filterProperties = useCallback(() => {
     // First filter based on showSold toggle
     let filtered = showSold 
       ? properties // Show all properties including sold
@@ -103,7 +95,15 @@ const PropertyList = () => {
     // Log counts for debugging
     const soldCount = properties.filter(p => p.status === 'SOLD' || p.status === 'sold').length;
     console.log(`Total: ${properties.length}, Available: ${properties.length - soldCount}, Sold: ${soldCount}, Showing: ${filtered.length}`);
-  };
+  }, [properties, searchTerm, filterType, showSold]);
+
+  useEffect(() => {
+    fetchProperties();
+  }, [fetchProperties]);
+
+  useEffect(() => {
+    filterProperties();
+  }, [filterProperties]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this property?')) {
@@ -114,6 +114,7 @@ const PropertyList = () => {
       await propertyService.deleteProperty(id);
       setProperties(properties.filter(p => p.id !== id));
     } catch (err) {
+      console.error('Failed to delete property:', err);
       alert('Failed to delete property');
     }
   };
@@ -220,12 +221,12 @@ const PropertyList = () => {
         day: 'numeric'
       });
     } catch (e) {
+      console.warn('Date formatting error:', e);
       return 'N/A';
     }
   };
 
   const soldCount = properties.filter(p => p.status === 'SOLD' || p.status === 'sold').length;
-  const availableCount = properties.length - soldCount;
 
   if (loading) {
     return (

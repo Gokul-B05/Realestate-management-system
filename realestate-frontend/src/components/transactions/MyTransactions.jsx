@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Table, Badge, Spinner, Alert, Nav } from 'react-bootstrap';
 import { FaShoppingCart, FaDollarSign, FaCalendar } from 'react-icons/fa';
 import transactionService from '../../services/transactionService';
@@ -10,11 +10,7 @@ const MyTransactions = () => {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('purchases');
 
-  useEffect(() => {
-    fetchTransactions();
-  }, []);
-
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
       const [purchasesData, salesData] = await Promise.all([
         transactionService.getMyPurchases(),
@@ -23,11 +19,16 @@ const MyTransactions = () => {
       setPurchases(purchasesData);
       setSales(salesData);
     } catch (err) {
+      console.error('Failed to load transactions:', err);
       setError('Failed to load transactions');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   if (loading) return <Container className="text-center py-5"><Spinner animation="border" /></Container>;
 

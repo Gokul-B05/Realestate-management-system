@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { FaSave, FaTimes, FaPhone, FaMapMarkerAlt, FaHome, FaDollarSign } from 'react-icons/fa';
@@ -20,13 +20,7 @@ const PropertyForm = () => {
     propertyType: 'SALE'
   });
 
-  useEffect(() => {
-    if (id) {
-      fetchProperty();
-    }
-  }, [id]);
-
-  const fetchProperty = async () => {
+  const fetchProperty = useCallback(async () => {
     try {
       const properties = await propertyService.getAllProperties();
       const property = properties.find(p => p.id === parseInt(id));
@@ -42,11 +36,18 @@ const PropertyForm = () => {
         });
       }
     } catch (err) {
+      console.error('Failed to load property:', err);
       setError('Failed to load property');
     } finally {
       setFetchLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      fetchProperty();
+    }
+  }, [id, fetchProperty]);
 
   const handleChange = (e) => {
     setFormData({
